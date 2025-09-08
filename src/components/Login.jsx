@@ -29,7 +29,7 @@ function Login() {
 
   return (
     <div className='mx-auto my-24 flex items-center justify-center'>
-    <fieldset className=" h-80 fieldset bg-base-300 border-base-300 rounded-box w-xs border p-4">
+    <fieldset className=" h-96 fieldset bg-base-300 border-base-300 flex flex-col justify-between rounded-box w-xs border p-4">
     <legend className="mx-auto mt-4 pt-12 font-semibold text-xl ">Login</legend>
 
     <label className="label font-semibold">Email</label>

@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react'
-import { data, useParams } from 'react-router'
+import { useParams } from 'react-router'
 import { createSocketConnection } from '../utils/Socket';
 import {useSelector} from 'react-redux'
 import axios from 'axios'
@@ -10,6 +10,7 @@ function ChatWindow() {
     const user = useSelector((state)=>state.user)
     const [msg,setMsg] = useState([]);
     const [inputMessage,setInputMessage] = useState('')
+    const [online,setOnline] = useState(false)
 
     const fetchChat = async()=>{
       try {
@@ -30,12 +31,25 @@ function ChatWindow() {
     const socket = createSocketConnection();
     socket.emit("joinChat",{userId:user?._id,targetUserId:targetUserId})
 
-    socket.on("messageReceived",({firstName,userId,photoUrl,chat,time})=>{
-      // console.log(time)
+    socket.emit('online',{userId:user._id})
+
+    const handleOnline = ({arr}) => {
+    setOnline(arr.includes(targetUserId));
+    };
+
+  const handleOffline = ({arr}) => {
+    setOnline(arr.includes(targetUserId));
+  };
+
+    socket.on('isOnline', handleOnline);
+    socket.on('offlineUser', handleOffline);
+
+    socket.on("messageReceived",({firstName,userId,photoUrl,chat})=>{
      setMsg((prev)=>[...prev,{senderId:{firstName:firstName,_id:userId,photoUrl:photoUrl},text:chat}])
       })
 
       return()=>{
+        socket.emit('offline',{userId:user._id});
         socket.disconnect();
       }
     },[user,targetUserId]);
@@ -43,13 +57,15 @@ function ChatWindow() {
     const handleSendMessage = ()=>{
       const socket = createSocketConnection();
       socket.emit("sendMessage",{firstName:user?.firstName,userId:user?._id,targetUserId:targetUserId,chat:inputMessage});
-      
       setInputMessage('');
     }
-    console.log(msg)
+
+
   return (
     <div className='w-[75vw] flex flex-col mx-auto border-2 border-gray-500 mt-10 h-[70vh]'>
-        <h2 className='text-2xl font-bold text-green-400 border-b  border-gray-500 p-3'>Chat</h2>
+        <h2 className='text-2xl font-bold text-green-400 border-b  border-gray-500 p-3'>Chat
+          <span className='text-blue-500 text-sm'>{online?'(online)':''}</span>
+        </h2>
         <div className='h-[80%] overflow-y-auto'>
           {msg.map((m,idx)=>
           (user?._id!==m?.senderId?._id)?
